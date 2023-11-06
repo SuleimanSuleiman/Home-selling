@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  first_name   String   @db.VarChar(255)
+  last_name    String   @db.VarChar(255)
+  email        String   @unique(map: "user_email_unique") @db.VarChar(255)
+  confirmEmail Boolean  @default(false)
+  role         Role     @default(User)
+  age          Int?
+  phone        Int
+  password     String   @db.VarChar(255)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  houses       House[]
+  reviews      Review[]
+  Session      Session?
+  Photo        Photo[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model House {
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255)
+  desc         String   @db.LongText
+  price        Decimal
+  Proprietor   User?    @relation(fields: [proprietorId], references: [id], onDelete: Cascade)
+  proprietorId Int?
+  location     String   @db.LongText
+  reviews      Review[]
+  Photo        Photo[]
+}
+
+model Photo {
+  id      Int     @id @default(autoincrement())
+  houseId Int
+  path    String  @db.LongText
+  house   House   @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  User    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cover   Boolean @default(false)
+  userId  Int?
+}
+
+model Review {
+  id      Int    @id @default(autoincrement())
+  User    User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int?
+  review  Float  @default(2.5)
+  House   House? @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  houseId Int?
+}
+
+model Session {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @unique
+}
+
+enum Role {
+  admin
+  User
+}
